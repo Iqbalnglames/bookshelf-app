@@ -1,11 +1,20 @@
 document.addEventListener('DOMContentLoaded', function () {
+    if(isStorageExist()) {
+        loadDataFromStorage()
+    }
     const submitBook = document.getElementById('inputBook')
     submitBook.addEventListener('submit', function (event) {
         event.preventDefault()
-        addBook()
+        addBook()       
     })
 })
-const generateBookID = () => {
+
+const RENDER_EV = 'render_book_data'
+const SAVED_BOOKS = 'saved-books-data'
+const BOOKS_KEY = 'books-data'
+let booksData = []
+
+function generateBookID()  {
     return +new Date()
 }
 
@@ -19,22 +28,57 @@ const generateBookObj = (bookId, titleBook, bookAuthor, bookYear, isReaded) => {
     }
 }
 
-const addBook = () => {
+//fungsi untuk mengecek apakah localstorage tersedia di browser
+function isStorageExist() {
+    if(typeof(Storage) === undefined) {
+        alert ('browser tidak memiliki local storage')
+        return false
+    }
+    return true
+}
+
+function loadDataFromStorage() {
+    const serializedData = localStorage.getItem(BOOKS_KEY)
+    let data = JSON.parse(serializedData)
+
+    if(data !== null) {
+        for (const books of data) {
+            booksData.push(books)
+        }
+    }
+    document.dispatchEvent(new Event(RENDER_EV))
+}
+
+//fungsi menyimpan buku ke localstorage
+function saveBooksData() {
+    if(isStorageExist()) {      
+        const parsedBooks = JSON.stringify(booksData)
+        localStorage.setItem(BOOKS_KEY, parsedBooks)
+        document.dispatchEvent(new Event(SAVED_BOOKS))
+    }
+}
+document.addEventListener(SAVED_BOOKS, function() {
+    console.log(localStorage.getItem(BOOKS_KEY))
+})
+
+//fungsi menambahkan buku
+ function addBook() {
     const bookTitle = document.getElementById('inputBookTitle').value
     const bookAuthor = document.getElementById('inputBookAuthor').value
     const bookYear = document.getElementById('inputBookYear').value
     const bookID = generateBookID()
-    const booksObj = generateBookObj(bookID, bookTitle, bookAuthor, bookYear, false)
+    const readedChecker = document.getElementById('inputBookIsComplete')
+    const readedChecked = readedChecker.checked ? true : false
+    const booksObj = generateBookObj(bookID, bookTitle, bookAuthor, bookYear, readedChecked)
     booksData.push(booksObj)
-
+    
     document.dispatchEvent(new Event(RENDER_EV))
-
+    saveBooksData()
 }
 
-const RENDER_EV = 'render_book_data'
-let booksData = []
-
+//membuat elemen booklist
 const bookList = (booksObj) => {
+
     const textBookTitle = document.createElement('h3')
     textBookTitle.innerText = booksObj.titleBook
 
@@ -49,40 +93,56 @@ const bookList = (booksObj) => {
     listBooksContaier.append(textBookTitle, textBookAuthor, textBookYear)
     listBooksContaier.setAttribute('id', `book-${booksObj.bookId}`)
 
-    if (booksObj.isReaded) {
-        const undo_button = document.createElement('button')
-        undo_button.classList.add('undo-button')
+        if (booksObj.isReaded) {
 
-        undo_button.addEventListener('click', function () {
-            undoBookFromReaded(booksObj.id)
-        })
+            const undo_button = document.createElement('button')
+            undo_button.innerHTML = 'Belum Selesai Dibaca'
+            undo_button.classList.add('green')
 
-        const remove_button = document.createElement('button')
-        remove_button.classList.add('remove-button')
+            undo_button.addEventListener('click', function () {
+                undoBookFromReaded(booksObj.bookId)
+            })
 
-        remove_button.addEventListener('click', function () {
-            removeBookFromReaded(booksObj.id)
-        })
+            const remove_button = document.createElement('button')
+            remove_button.innerHTML = 'Hapus Buku'
+            remove_button.classList.add('red')
 
-        listBooksContaier.append(undo_button, remove_button)
-    } else {
-        const checkButton = document.createElement('button')
-        checkButton.innerHTML = 'selesai'
-        checkButton.classList.add('green')
+            remove_button.addEventListener('click', function () {
+                removeBookFromReaded(booksObj.bookId)
+            })
+            const buttonContaier = document.createElement('div')
+            buttonContaier.classList.add('action')
+            buttonContaier.append(undo_button, remove_button)
+            listBooksContaier.append(buttonContaier)
 
-        checkButton.addEventListener('click', function () {
-            addBooktoReaded(booksObj.bookId)
-        })
+        } else {
 
-        const buttonContaier = document.createElement('div')
-        buttonContaier.classList.add('action')
-        buttonContaier.append(checkButton)
-        listBooksContaier.append(buttonContaier)
-    }
+            const checkButton = document.createElement('button')
+            checkButton.innerHTML = 'selesai'
+            checkButton.classList.add('green')
 
+            checkButton.addEventListener('click', function () {
+                addBooktoReaded(booksObj.bookId)            
+            })
+
+            const remove_button = document.createElement('button')
+            remove_button.innerHTML = 'Hapus Buku'
+            remove_button.classList.add('red')
+
+            remove_button.addEventListener('click', function () {
+                removeBookFromReaded(booksObj.bookId)
+            })
+
+            const buttonContaier = document.createElement('div')
+            buttonContaier.classList.add('action')
+            buttonContaier.append(checkButton, remove_button)
+            listBooksContaier.append(buttonContaier)
+
+        }
     return listBooksContaier
 }
 
+//fungsi untuk menemukan id buku
 function findBook(bookId) {
     for (const bookItem of booksData) {
         if (bookItem.bookId == bookId) {
@@ -92,6 +152,7 @@ function findBook(bookId) {
     return null;
 }
 
+//fungsi untuk menambahkan buku yang telah selesai dibaca
 function addBooktoReaded(bookId) {
     const bookTarget = findBook(bookId)
 
@@ -99,16 +160,56 @@ function addBooktoReaded(bookId) {
 
     bookTarget.isReaded = true
     document.dispatchEvent(new Event(RENDER_EV))
+    saveBooksData()
 }
 
+//fungsi findBookIndex
+function findBookIndex(bookId) {
+    for (const index in booksData) {
+        if(booksData[index].bookId === bookId) {
+            return index
+        }
+    }
+    return -1
+}
+
+//fungsi untuk menghapus buku 
+function removeBookFromReaded(bookId) {
+    const bookTarget = findBookIndex(bookId)
+    
+    if(bookTarget === -1) return;
+
+    booksData.splice(bookTarget, 1);
+    document.dispatchEvent(new Event(RENDER_EV))
+    saveBooksData()
+}
+
+//fungsi untuk undo
+function undoBookFromReaded(bookId) {
+    const bookTarget = findBook(bookId)
+
+    if (bookTarget == null) return;
+
+    bookTarget.isReaded = false
+    document.dispatchEvent(new Event(RENDER_EV))
+    saveBooksData()
+}
+
+//render list buku
 document.addEventListener(RENDER_EV, function () {
     const incompletedBookList = document.getElementById('incompleteBookshelfList')
     incompletedBookList.innerHTML = ''
 
+    const completedBookList = document.getElementById('completeBookshelfList')
+    completedBookList.innerHTML = ''
+
     for (const book of booksData) {
         const bookElement = bookList(book)
-        if (!book.isReaded) {
+        if (book.isReaded) {
+            completedBookList.append(bookElement)
+        } else {
             incompletedBookList.append(bookElement)
         }
+        
     }
 })
