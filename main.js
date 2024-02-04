@@ -1,3 +1,4 @@
+//event ketika berkas berhasil di load semua
 document.addEventListener('DOMContentLoaded', function () {
     if(isStorageExist()) {
         loadDataFromStorage()
@@ -14,10 +15,12 @@ const SAVED_BOOKS = 'saved-books-data'
 const BOOKS_KEY = 'books-data'
 let booksData = []
 
+//fungsi untuk generate id buku berdasarkan tanggal input
 function generateBookID()  {
     return +new Date()
 }
 
+//fungsi untuk generate data ke dalam bentuk object 
 const generateBookObj = (bookId, titleBook, bookAuthor, bookYear, isReaded) => {
     return {
         bookId,
@@ -37,6 +40,7 @@ function isStorageExist() {
     return true
 }
 
+//fungsi untuk load data dari localstorage
 function loadDataFromStorage() {
     const serializedData = localStorage.getItem(BOOKS_KEY)
     let data = JSON.parse(serializedData)
@@ -77,7 +81,7 @@ document.addEventListener(SAVED_BOOKS, function() {
 }
 
 //membuat elemen booklist
-const bookList = (booksObj) => {
+ function bookList(booksObj) {
 
     const textBookTitle = document.createElement('h3')
     textBookTitle.innerText = booksObj.titleBook
