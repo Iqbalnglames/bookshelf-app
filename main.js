@@ -21,13 +21,13 @@ function generateBookID()  {
 }
 
 //fungsi untuk generate data ke dalam bentuk object 
-const generateBookObj = (bookId, titleBook, bookAuthor, bookYear, isReaded) => {
+const generateBookObj = (id, title, author, year, isComplete) => {
     return {
-        bookId,
-        titleBook,
-        bookAuthor,
-        bookYear,
-        isReaded,
+        id,
+        title, 
+        author,
+        year,
+        isComplete
     }
 }
 
@@ -84,18 +84,18 @@ document.addEventListener(SAVED_BOOKS, function() {
  function bookList(booksObj) {
 
     const textBookTitle = document.createElement('h3')
-    textBookTitle.innerText = booksObj.titleBook
+    textBookTitle.innerText = booksObj.title
 
     const textBookAuthor = document.createElement('p')
-    textBookAuthor.innerText = `Penulis: ${booksObj.bookAuthor}`
+    textBookAuthor.innerText = `Penulis: ${booksObj.author}`
 
     const textBookYear = document.createElement('p')
-    textBookYear.innerText = `Tahun: ${booksObj.bookYear}`
+    textBookYear.innerText = `Tahun: ${booksObj.year}`
 
     const listBooksContaier = document.createElement('article')
     listBooksContaier.classList.add('book_item')
     listBooksContaier.append(textBookTitle, textBookAuthor, textBookYear)
-    listBooksContaier.setAttribute('id', `book-${booksObj.bookId}`)
+    listBooksContaier.setAttribute('id', `book-${booksObj.id}`)
 
         if (booksObj.isReaded) {
 
