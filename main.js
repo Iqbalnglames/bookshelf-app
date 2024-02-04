@@ -2,7 +2,7 @@
 document.addEventListener('DOMContentLoaded', function () {
     if(isStorageExist()) {
         loadDataFromStorage()
-    }
+    }    
     const submitBook = document.getElementById('inputBook')
     submitBook.addEventListener('submit', function (event) {
         event.preventDefault()
@@ -69,7 +69,8 @@ document.addEventListener(SAVED_BOOKS, function() {
  function addBook() {
     const bookTitle = document.getElementById('inputBookTitle').value
     const bookAuthor = document.getElementById('inputBookAuthor').value
-    const bookYear = document.getElementById('inputBookYear').value
+    const bookYear = parseInt(document.getElementById('inputBookYear').value) 
+    console.log(typeof(bookYear))
     const bookID = generateBookID()
     const readedChecker = document.getElementById('inputBookIsComplete')
     const readedChecked = readedChecker.checked ? true : false
